@@ -1,0 +1,191 @@
+.diary-outer {
+	width:100%;
+	padding:0px;
+	margin:0px;
+
+	font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size:13px;
+	
+}
+
+.diary-navigation {
+	width:100%;
+	height:40px;
+	position:relative;
+}
+
+.diary-inner {
+	width:100%;
+	float:none;
+	overflow-y:scroll;
+}
+
+.diary-menu {
+	float:left;
+	width:20%;
+}
+
+.diary-menu-header {
+	height:20px;
+}
+
+.diary-menu .item {
+	width:100%;
+	border-left:none !important;
+	background:#eee;
+}
+
+
+
+.diary-calendar {
+	float:left;
+	width:80%;
+	overflow-x:scroll;
+
+}
+
+.wkend {
+	background:#f9f9f9;
+}
+
+.today {
+	background:#ffdddd;
+}
+
+
+.diary-calendar-header {
+	height:20px;
+	background:#eee;
+	/*width set by javascript*/
+}
+
+.diary-outer .col {
+	position:relative;
+	float:left;
+	border-right:1px solid #ccc;
+	box-sizing:border-box;
+  	-moz-box-sizing:border-box;
+  	-webkit-box-sizing:border-box;
+
+}
+
+.diary-outer .col span {
+	position:absolute;
+}
+
+
+.diary-outer .row {
+	height:200px;
+	position:relative;
+	border:1px solid #ccc;
+	border-right:none;
+	border-bottom:none;
+	box-sizing:border-box;
+  	-moz-box-sizing:border-box;
+  	-webkit-box-sizing:border-box;
+}
+
+.diary-outer .row span {
+	position:absolute;
+	margin:10px;
+	display:block;
+}
+
+.diary-calendar-header .block {
+	height:20px;
+	border:1px solid #ccc;
+	border-right:none;
+	border-bottom:none;
+}
+
+
+.diary-calendar-header .block span {
+	position:absolute;
+	width:100%;
+	text-align:left;
+	display:block;
+	padding:2px 0px;
+	
+}
+
+.diary-calendar-bookings {
+	position:relative;
+}
+
+.diary-booking {
+	position:absolute;
+	height:200px;
+}
+
+
+
+.diary-booking-inner {
+	margin:10px;
+	height:80px;
+	background:#f99;
+	border-radius:10px;
+	position:relative;
+}
+
+.diary-booking-inner.lifted {
+	-webkit-box-shadow:  1px 1px 5px 1px rgba(0, 0, 0, 0.3);
+    box-shadow:  1px 1px 5px 1px rgba(0, 0, 0, 0.3);
+}
+
+.diary-booking-inner span {
+	display:block;
+	position:absolute;
+	left:15px;
+	top:24px;
+}
+
+.diary-booking-inner .hotspot {
+	position:absolute;
+	display:block;
+	background:#fcc;
+	border-radius:10px;
+	width:20px;
+	height:20px;
+}
+
+.hotspot.move {
+	left:0px
+	top:0px;
+	width:100%;
+	border-radius:10px 10px 0px 0px;
+	cursor:move;
+
+}
+
+.hotspot.left {
+	left:0px;
+	bottom:0px;
+	cursor:w-resize;
+}
+
+.hotspot.right {
+	right:0px;
+	bottom:0px;
+	cursor:e-resize;
+}
+
+
+.cell {
+	cursor:pointer;
+}
+
+.cell.unavailable {
+	background:#ddd;
+}
+
+.cell.temp {
+	background:#fee;
+}
+
+.cell.locked {
+	cursor:not-allowed;
+}
+.cell.booked {
+	/*background:#ddd;*/
+}
+
