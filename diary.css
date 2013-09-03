@@ -6,6 +6,15 @@
 	font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
 	font-size:13px;
 	
+	
+
+}
+
+.diary-cannot-select {
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	-webkit-user-select: none;
+	user-select: none;
 }
 
 .diary-navigation {
@@ -49,7 +58,8 @@
 }
 
 .today {
-	background:#ffdddd;
+	background:#E2F1FC;
+	border:1px solid #E2F1FC !important;
 }
 
 
@@ -62,7 +72,7 @@
 .diary-outer .col {
 	position:relative;
 	float:left;
-	border-right:1px solid #ccc;
+	border-right:1px solid #eee;
 	box-sizing:border-box;
   	-moz-box-sizing:border-box;
   	-webkit-box-sizing:border-box;
@@ -77,7 +87,7 @@
 .diary-outer .row {
 	height:200px;
 	position:relative;
-	border:1px solid #ccc;
+	border:1px solid #eee;
 	border-right:none;
 	border-bottom:none;
 	box-sizing:border-box;
@@ -93,9 +103,10 @@
 
 .diary-calendar-header .block {
 	height:20px;
-	border:1px solid #ccc;
+	border:1px solid #eee;
 	border-right:none;
 	border-bottom:none;
+
 }
 
 
@@ -122,9 +133,15 @@
 .diary-booking-inner {
 	margin:10px;
 	height:80px;
-	background:#f99;
+	background:#fff;
 	border-radius:10px;
 	position:relative;
+	border:1px solid #666;
+}
+
+.diary-booking-temp .diary-booking-inner {
+	border:1px solid #E2F1FC;
+	cursor:move;
 }
 
 .diary-booking-inner.lifted {
@@ -142,30 +159,34 @@
 .diary-booking-inner .hotspot {
 	position:absolute;
 	display:block;
-	background:#fcc;
+	background:#A3D4F5;
 	border-radius:10px;
-	width:20px;
-	height:20px;
+	width:15px;
+	height:15px;
 }
 
 .hotspot.move {
-	left:0px
+	left:25%;
 	top:0px;
-	width:100%;
-	border-radius:10px 10px 0px 0px;
+	width:50%;
+	border-radius:0px 0px 0px 0px;
 	cursor:move;
 
 }
 
 .hotspot.left {
 	left:0px;
-	bottom:0px;
+	top:0px;
+	width:25%;
+	border-radius:10px 0px 0px 0px;
 	cursor:w-resize;
 }
 
 .hotspot.right {
 	right:0px;
-	bottom:0px;
+	top:0px;
+	width:25%;
+	border-radius:0px 10px 0px 0px;
 	cursor:e-resize;
 }
 
@@ -183,6 +204,10 @@
 }
 
 .cell.locked {
+	cursor:not-allowed;
+}
+
+.cell.nospace {
 	cursor:not-allowed;
 }
 .cell.booked {
