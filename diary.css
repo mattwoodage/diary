@@ -5,7 +5,7 @@
 
 	font-family:"Helvetica Neue", Helvetica, Arial, sans-serif;
 	font-size:13px;
-	
+	overflow:hidden;
 	
 
 }
@@ -18,20 +18,36 @@
 }
 
 .diary-navigation {
+
 	width:100%;
 	height:40px;
-	position:relative;
+	position:absolute;
+	background:#fff;
+	z-index:1000;
+}
+
+.diary-scroll {
+	width:100%;
+	top:140px;
+	overflow-y:scroll;
+	position:absolute;
 }
 
 .diary-inner {
 	width:100%;
 	float:none;
-	overflow-y:scroll;
+	overflow:scroll;
+	z-index:500;
+	position:absolute;
 }
 
 .diary-menu {
 	float:left;
-	width:20%;
+	z-index:2000px;
+	box-sizing:border-box;
+  	-moz-box-sizing:border-box;
+  	-webkit-box-sizing:border-box;
+  	border-right:1px solid #ccc;
 }
 
 .diary-menu-header {
@@ -41,14 +57,13 @@
 .diary-menu .item {
 	width:100%;
 	border-left:none !important;
-	background:#eee;
+	background:#fff;
 }
 
 
 
 .diary-calendar {
 	float:left;
-	width:80%;
 	overflow-x:scroll;
 
 }
@@ -58,14 +73,33 @@
 }
 
 .today {
-	background:#E2F1FC;
-	border:1px solid #E2F1FC !important;
+	background:#E8F2F8;
 }
 
 
-.diary-calendar-header {
-	height:20px;
-	background:#eee;
+body {overflow:hidden;}
+
+.diary-panel {
+	position:absolute;
+	top:40px;
+	z-index:2000;
+	height:101px;
+	background:#fff;
+	box-sizing:border-box;
+  	-moz-box-sizing:border-box;
+  	-webkit-box-sizing:border-box;
+  	border-right:1px solid #ccc;
+  	border-bottom:1px solid #ccc;
+}
+
+.diary-header {
+	position:absolute;
+	top:40px;
+	z-index:1000;
+	height:100px;
+	background:#fff;
+
+	border-bottom:1px solid #ccc;
 	/*width set by javascript*/
 }
 
@@ -79,7 +113,7 @@
 
 }
 
-.diary-outer .col span {
+.diary-inner .col span {
 	position:absolute;
 }
 
@@ -101,23 +135,36 @@
 	display:block;
 }
 
-.diary-calendar-header .block {
-	height:20px;
+.diary-header .block {
 	border:1px solid #eee;
+	border-top:1px solid #ccc;
 	border-right:none;
 	border-bottom:none;
+	height:100px;
+	padding:6px;
+
+}
+
+.diary-header .cal {
+	display:block;
+	padding:0px 0px;
+	
 
 }
 
 
-.diary-calendar-header .block span {
-	position:absolute;
-	width:100%;
-	text-align:left;
+.diary-header .block .cal span {
+	text-align:center;
 	display:block;
-	padding:2px 0px;
 	
 }
+
+.diary-header .block span.M {font-size:14px; text-transform:uppercase; }
+.diary-header .block span.Y {font-size:10px; margin-bottom:9px;}
+.diary-header .block span.DY {font-size:14px; text-transform: uppercase; line-height:17px;}
+.diary-header .block span.D {font-size:30px; font-weight:bold; line-height:25px;}
+.diary-header .block span.T {font-size:10px; font-weight:bold;}
+
 
 .diary-calendar-bookings {
 	position:relative;
@@ -133,15 +180,19 @@
 .diary-booking-inner {
 	margin:10px;
 	height:80px;
-	background:#fff;
+	background:#E2F1FC;
 	border-radius:10px;
 	position:relative;
 	border:1px solid #666;
 }
 
 .diary-booking-temp .diary-booking-inner {
-	border:1px solid #E2F1FC;
-	cursor:move;
+	border:1px dashed #000;
+	cursor:pointer;
+}
+
+.diary-booking-temp .diary-booking-inner .hotspot {
+	background:#A3D4F5;
 }
 
 .diary-booking-inner.lifted {
@@ -151,24 +202,50 @@
 
 .diary-booking-inner span {
 	display:block;
-	position:absolute;
-	left:15px;
-	top:24px;
 }
+
+.diary-booking-inner span.diary-booking-contact {
+	left:10px;
+	top:24px;
+	font-size:14px;
+	margin:20px 0px 0px 10px;
+	font-weight:bold;
+	line-height:11px;
+}
+
+.diary-booking-inner span.diary-booking-status {
+	left:10px;
+	top:42px;
+	text-transform:uppercase;
+	margin:4px 0px 0px 10px;
+	font-size:11px;
+}
+
+.diary-booking-inner a.diary-booking-edit {
+	display:block;
+	position:absolute;
+	right:7px;
+	bottom:7px;
+	font-size:11px;
+	color:#000;
+	text-decoration: none;
+	text-transform:uppercase;
+}
+
 
 .diary-booking-inner .hotspot {
 	position:absolute;
 	display:block;
-	background:#A3D4F5;
+	background:#51B3F5;
 	border-radius:10px;
 	width:15px;
 	height:15px;
 }
 
 .hotspot.move {
-	left:25%;
+	left:15%;
 	top:0px;
-	width:50%;
+	width:70%;
 	border-radius:0px 0px 0px 0px;
 	cursor:move;
 
@@ -177,7 +254,7 @@
 .hotspot.left {
 	left:0px;
 	top:0px;
-	width:25%;
+	width:15%;
 	border-radius:10px 0px 0px 0px;
 	cursor:w-resize;
 }
@@ -185,7 +262,7 @@
 .hotspot.right {
 	right:0px;
 	top:0px;
-	width:25%;
+	width:16%;
 	border-radius:0px 10px 0px 0px;
 	cursor:e-resize;
 }
@@ -199,8 +276,11 @@
 	background:#ddd;
 }
 
+
+
 .cell.temp {
-	background:#fee;
+	/*background:#BBE0F8;
+	border-left:1px solid #BBE0F8;*/
 }
 
 .cell.locked {

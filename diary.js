@@ -42,15 +42,17 @@ String.prototype.capitalize = function() {
     defaults = {};
     this.settings = $.extend({}, defaults, options);
     SM.diary.defaults = {
-      blockWidth:100,
+      blockWidth:70,
       blockHeight:100,
+      menuWidth:200,
       bookingBlockInMinutes:60*24,
       dayStartTimeInHours:9,
       dayEndTimeInHours:18,
       minimumBookingSizeInBlocks:2,
       maximumBookingSizeInBlocks:10,
-      defaultBookingSizeInBlocks:4,
-      drawDividerAfterMinutes:360,
+      defaultBookingSizeInBlocks:2,
+      canBookWeekends:true,
+      prepPeriodInBlocks:undefined,
       scrollSizeInBlocks:3,
       from:new Date().clearTime(),
       to:new Date().add(30).days()
@@ -70,7 +72,9 @@ String.prototype.capitalize = function() {
     SM.diary.scrollLeftMin = 0;
     SM.diary.scrollLeftMax = 0;
     SM.diary.lastScrollLeft = 0;
+    SM.diary.lastScrollTop = 0;
     SM.diary.scrollStartPos = 0;
+    SM.diary.ignoreScroll = false;
     SM.diary.drag = {}
 
     SM.diary.unavailables = [];
@@ -86,7 +90,7 @@ String.prototype.capitalize = function() {
     var from = SM.diary.settings.from.clone()
     var to = SM.diary.settings.to.clone()
 
-    console.log(from + " -> " + to)
+
     var i = 0
     while (from.compareTo(to) == -1) {
       i+=1;
@@ -104,69 +108,64 @@ String.prototype.capitalize = function() {
     SM.diary.settings.container.addClass("diary-cannot-select")
 
     SM.diary.outer = $("<div class='diary-outer'></div>")
-    SM.diary.inner = $("<div class='diary-inner'></div>")
-    SM.diary.navigation = $("<div class='diary-navigation'></div>")
+    SM.diary.scroll = $("<div class='diary-scroll'></div>")
+    SM.diary.inner = $("<div class='diary-inner diary-cannot-select'></div>")
+    SM.diary.navigation = $("<div class='diary-navigation'><form name='diary-form' class='diary-form'><input name='date' value='' /></form></div>")
+    SM.diary.header = $("<div class='diary-header'></div>")
+    SM.diary.panel = $("<div class='diary-panel'></div>")
+    
     SM.diary.menu = $("<div class='diary-menu'></div>")
     SM.diary.menu.header = {}
-    SM.diary.menu.header.YE = $("<div class='diary-menu-header diary-menu-header-YE'></div>")
-    SM.diary.menu.header.MO = $("<div class='diary-menu-header diary-menu-header-MO'></div>")
-    SM.diary.menu.header.DA = $("<div class='diary-menu-header diary-menu-header-DA'></div>")
-    SM.diary.menu.header.HO = $("<div class='diary-menu-header diary-menu-header-HO'></div>")
-    SM.diary.menu.header.MI = $("<div class='diary-menu-header diary-menu-header-MI'></div>")
-    
+
     SM.diary.menu.items = $("<div class='diary-menu-items'></div>")
     SM.diary.calendar = $("<div class='diary-calendar'></div>")
-    SM.diary.calendar.header = {}
-    SM.diary.calendar.header.YE = $("<div class='diary-calendar-header diary-calendar-header-YE'></div>")
-    SM.diary.calendar.header.MO = $("<div class='diary-calendar-header diary-calendar-header-MO'></div>")
-    SM.diary.calendar.header.DA = $("<div class='diary-calendar-header diary-calendar-header-DA'></div>")
-    SM.diary.calendar.header.HO = $("<div class='diary-calendar-header diary-calendar-header-HO'></div>")
-    SM.diary.calendar.header.MI = $("<div class='diary-calendar-header diary-calendar-header-MI'></div>")
     
+
     SM.diary.calendar.blocks = $("<div class='diary-calendar-blocks'></div>")
     SM.diary.calendar.dividers = $("<div class='diary-calendar-dividers'></div>")
     SM.diary.calendar.bookings = $("<div class='diary-calendar-bookings'></div>")
     SM.diary.settings.container.html("")
 
     SM.diary.settings.container.append (SM.diary.outer)
-    SM.diary.outer.append (SM.diary.navigation)
     
-    SM.diary.outer.append (SM.diary.inner)
+    SM.diary.outer.append (SM.diary.navigation)
+    SM.diary.outer.append (SM.diary.panel)
+    SM.diary.outer.append (SM.diary.header)
+    SM.diary.outer.append (SM.diary.scroll)
+    SM.diary.scroll.append (SM.diary.inner)
 
     SM.diary.dynamicCSS.push(".diary-outer .col {width:" + SM.diary.settings.blockWidth + "px;}")
     SM.diary.dynamicCSS.push(".diary-outer .row {height:" + SM.diary.settings.blockHeight + "px;}")
     SM.diary.dynamicCSS.push(".diary-booking    {height:" + SM.diary.settings.blockHeight + "px;}")
     
+    
+
+    SM.diary.menu.css("width",SM.diary.settings.menuWidth + "px")
+    SM.diary.panel.css("width",SM.diary.settings.menuWidth + "px")
+    
+    SM.diary.calendar.css("width",(Number(SM.diary.settings.container.width()) - SM.diary.settings.menuWidth) + "px")
+
+    
     SM.diary.outer.append ("<style>" + SM.diary.dynamicCSS.join("\n") + "</style>")
 
+
+
     SM.diary.inner.append (SM.diary.menu)
+    
     SM.diary.inner.append (SM.diary.calendar)
       
-    SM.diary.calendar.append (SM.diary.calendar.header.YE)
-    SM.diary.calendar.append (SM.diary.calendar.header.MO)
-    SM.diary.calendar.append (SM.diary.calendar.header.DA)
-    SM.diary.calendar.append (SM.diary.calendar.header.HO)
-    SM.diary.calendar.append (SM.diary.calendar.header.MI)
     
     SM.diary.calendar.append (SM.diary.calendar.blocks)
     SM.diary.calendar.append (SM.diary.calendar.bookings)
 
-    SM.diary.menu.append (SM.diary.menu.header.YE)
-    SM.diary.menu.append (SM.diary.menu.header.MO)
-    SM.diary.menu.append (SM.diary.menu.header.DA)
-    SM.diary.menu.append (SM.diary.menu.header.HO)
-    SM.diary.menu.append (SM.diary.menu.header.MI)
 
     SM.diary.menu.append (SM.diary.menu.items)
 
     // build blocks
     SM.diary.numberOfBlocks = SM.diary.blocks.length
     totalWidth = SM.diary.numberOfBlocks*SM.diary.settings.blockWidth
-    SM.diary.calendar.header.YE.width(totalWidth)
-    SM.diary.calendar.header.MO.width(totalWidth)
-    SM.diary.calendar.header.DA.width(totalWidth)
-    SM.diary.calendar.header.HO.width(totalWidth)
-    SM.diary.calendar.header.MI.width(totalWidth)
+    SM.diary.header.width(totalWidth)
+
     
     SM.diary.calendar.blocks.width(totalWidth)
     SM.diary.calendar.dividers.width(totalWidth)
@@ -177,12 +176,24 @@ String.prototype.capitalize = function() {
       blockEndsAt = SM.diary.blocks[b].end
 
       // blockEndsAt = SM.diary.blocks[b].add(SM.diary.settings.bookingBlockInMinutes).minutes()
-      SM.diary.calendar.header.YE.append ("<div class='block col " + SM.diary.stylesForDate(blockStartsAt) + "' ><span>" + blockStartsAt.toString("yyyy") + "</span></div>")
-      SM.diary.calendar.header.MO.append ("<div class='block col " + SM.diary.stylesForDate(blockStartsAt) + "' ><span>" + blockStartsAt.toString("MMM") + "</span></div>")
-      SM.diary.calendar.header.DA.append ("<div class='block col " + SM.diary.stylesForDate(blockStartsAt) + "' ><span>" + blockStartsAt.toString("ddd d") + "</span></div>")
-      SM.diary.calendar.header.HO.append ("<div class='block col " + SM.diary.stylesForDate(blockStartsAt) + "' ><span>" + blockStartsAt.toString("HH") + "</span></div>")
-      SM.diary.calendar.header.MI.append ("<div class='block col " + SM.diary.stylesForDate(blockStartsAt) + "' ><span>" + blockStartsAt.toString("mm") + "</span></div>")
+      var header = "<div class='block col " + SM.diary.stylesForDate(blockStartsAt) + "' ><span class='cal'>"
+      header += "<span class='M'>" + blockStartsAt.toString("MMM") + "</span>"
+      header += "<span class='Y'>" + blockStartsAt.toString("yyyy") + "</span>"
+      
+      header += "<span class='DY'>" + blockStartsAt.toString("ddd") + "</span>"
+      header += "<span class='D'>" + blockStartsAt.toString("d") + "</span>"
+      
+      tm = blockStartsAt.toString("HH:mm")
+        
+      if (SM.diary.settings.bookingBlockInMinutes >= 60*24) tm = "&nbsp;"
+        
 
+      header += "<span class='T'>" + tm + "</span>"
+      
+      header += "</span></div>"
+
+      SM.diary.header.append (header)
+      
     }
 
 
@@ -207,6 +218,9 @@ String.prototype.capitalize = function() {
       }
     }
 
+    SM.diary.scroll.css("height",(SM.diary.settings.container.height() - 140) + "px")
+
+
     //draw unavailables 
     for (u in SM.diary.unavailables) {
 
@@ -215,11 +229,21 @@ String.prototype.capitalize = function() {
         for (d in SM.diary.vehicles[v].dates) {
           date = SM.diary.vehicles[v].dates[d]
 
+          var unavailable = false
+
           if (date.block.start.between(SM.diary.unavailables[u].from, SM.diary.unavailables[u].to)) {
+            unavailable = true
+          }
+
+          if (!date.block.start.isWeekday()) {
+            if (SM.diary.settings.canBookWeekends == false) {
+              unavailable = true
+            }
+          }
+          if (unavailable) {
             date.locked = true
             date.unavailable = true
             date.cell.addClass("unavailable locked")
-
           }
         }
       }      
@@ -240,39 +264,44 @@ String.prototype.capitalize = function() {
     SM.diary.scrollLeftMax = Number(SM.diary.calendar.blocks.width()) - Number(SM.diary.calendar.width())
 
     // scrolling calendar
-    SM.diary.calendar.on("scroll", function(event) {
-      
-      if (!SM.diary.loading) {
-        scrollPos = Number($(this).scrollLeft())
-        
 
+    SM.diary.scroll.on("scroll", function(event) {
+      SM.diary.lastScrollTop = Number($(this).scrollTop())
+    })
+
+    SM.diary.calendar.on("scroll", function(event) {
+
+      if (!SM.diary.loading) {
+
+        scrollPos = Number($(this).scrollLeft())        
+        
+        
         scrollingDirection = SM.diary.NONE
         if (scrollPos < SM.diary.lastScrollLeft) scrollingDirection = SM.diary.LEFT
         if (scrollPos > SM.diary.lastScrollLeft) scrollingDirection = SM.diary.RIGHT
 
-        if ((scrollingDirection == SM.diary.LEFT) && (scrollPos < SM.diary.settings.blockWidth)) {
+        if ((scrollingDirection == SM.diary.LEFT) && (scrollPos < 1)) {
           SM.diary.shiftTime(SM.diary.LEFT)
         }
-        else if ((scrollingDirection == SM.diary.RIGHT) && (scrollPos > SM.diary.scrollLeftMax - SM.diary.settings.blockWidth)) {
+        else if ((scrollingDirection == SM.diary.RIGHT) && (scrollPos > SM.diary.scrollLeftMax - 1)) {
           SM.diary.shiftTime(SM.diary.RIGHT)
         }
 
         SM.diary.lastScrollLeft = scrollPos
 
-
+        SM.diary.setHeaderScroll(SM.diary.lastScrollLeft)
       }
+
+      
 
     })
 
-
-
+    
+    SM.diary.lastScrollLeft = Number(SM.diary.lastScrollLeft) + Number(SM.diary.scrollStartPos)
 
     SM.diary.loading = false
-    
-    SM.diary.lastScrollLeft += SM.diary.scrollStartPos 
-    SM.diary.calendar.scrollLeft(SM.diary.lastScrollLeft)
-
-
+    SM.diary.setScroll()
+    SM.diary.setHeaderScroll(SM.diary.lastScrollLeft)
 
   };
 
@@ -395,7 +424,7 @@ String.prototype.capitalize = function() {
   }
 
   SM.diary.hideTempBookingHighlight = function() {
-    //$("div.cell.temp",SM.diary.calendar.blocks).removeClass("temp")
+    $("div.cell.temp",SM.diary.calendar.blocks).removeClass("temp")
   }
 
   SM.diary.showHighlightingAtCell = function(elm,doShrink,doNegative,startSize) {
@@ -415,16 +444,19 @@ String.prototype.capitalize = function() {
 
     shrinkLimit = 1      //i.e. don't do any shrinking (for moving existing bookings)
     if (doShrink) {
-      shrinkLimit = SM.diary.settings.minimumBookingSizeInBlocks
+      shrinkLimit = (startSize - SM.diary.settings.minimumBookingSizeInBlocks) + 1
     }
+
     for (var k=0;k<shrinkLimit;k++) {
       //starting with the default width, try progressively smaller widths until minimum allowed
+
       for (var i=0;i<negativeOffsetMax;i++) {
         //starting from the current cell - try to fit the width in - otherwise go left one at a time
         toRight = startSize-1-i-k
         if (next>=toRight) {
           toLeft = startSize-(toRight+1+k)
           if (prev>=toLeft) {
+
             isSpace = true
             start = SM.diary.getNeighbouringDate(vehicle,date,-toLeft)
             if (start) start = start.block.start
@@ -438,7 +470,7 @@ String.prototype.capitalize = function() {
     }
     //build new booking object
     if (isSpace) {
-      SM.diary.tempBooking = {idx:-1,id:0,vehicle_id:vehicle.id,start:start, end:end, contact:"NEW BOOKING"}
+      SM.diary.tempBooking = {idx:-1,id:0,vehicle_id:vehicle.id,start:start, end:end, contact:"NEW BOOKING", status:"Draft"}
       SM.diary.setBooking(SM.diary.tempBooking,SM.diary.IS_NEW,SM.diary.DONT_LOCK,SM.diary.DONT_BOOK)
       
     }
@@ -466,7 +498,7 @@ String.prototype.capitalize = function() {
         vehicle.dates[d].booking_id = booking.id
 
         if (isNew) {
-          //vehicle.dates[d].cell.addClass("temp")
+          vehicle.dates[d].cell.addClass("temp")
         }
         else {
           if (doLock) {
@@ -500,7 +532,7 @@ String.prototype.capitalize = function() {
       startX = booking.cells[0].index()
       endX = booking.cells[booking.cells.length-1].index()
 
-      booking = $("<div class='diary-booking' data-booking='" + booking.idx + "'><div class='diary-booking-inner'><a class='hotspot left' href='#'><i></i></a><a class='hotspot right' href='#'><i></i></a><a class='hotspot move' href='#'><i></i></a><span>" + booking.contact + "</span></div></div>")
+      booking = $("<div class='diary-booking' data-booking='" + booking.idx + "'><div class='diary-booking-inner'><a class='hotspot left' href='#'><i></i></a><a class='hotspot right' href='#'><i></i></a><a class='hotspot move' href='#'><i></i></a><span class='diary-booking-contact'>" + booking.contact + "</span><span class='diary-booking-status'>" + booking.status + "</span><a href='/bookings/" + booking.id + "' class='diary-booking-edit'>Edit</a></div></div>")
       booking.css("top",vehicle.idx*SM.diary.settings.blockHeight)  //parameterise height
       booking.css("left",startX*SM.diary.settings.blockWidth)
       booking.css("width",(endX - startX + 1)*SM.diary.settings.blockWidth)
@@ -511,6 +543,15 @@ String.prototype.capitalize = function() {
       SM.diary.calendar.bookings.append(booking)
     }
 
+  }
+
+  SM.diary.setScroll = function() {
+    SM.diary.calendar.scrollLeft(SM.diary.lastScrollLeft)
+    SM.diary.scroll.scrollTop(SM.diary.lastScrollTop)
+  }
+
+  SM.diary.setHeaderScroll = function(pos) {
+    SM.diary.header.css("left",-pos + SM.diary.settings.menuWidth + "px")
   }
 
 
@@ -532,6 +573,8 @@ String.prototype.capitalize = function() {
     moveMinutes = SM.diary.settings.bookingBlockInMinutes * SM.diary.settings.scrollSizeInBlocks
     if (direction == SM.diary.LEFT) moveMinutes = -moveMinutes
 
+
+
     SM.diary.scrollStartPos = SM.diary.settings.scrollSizeInBlocks * SM.diary.settings.blockWidth
     // diff calc for RIGHT
     if (direction == SM.diary.RIGHT) SM.diary.scrollStartPos = -SM.diary.scrollStartPos
@@ -543,6 +586,52 @@ String.prototype.capitalize = function() {
     SM.diary.build();
     SM.diary.draw();
 
+
+  }
+
+
+  SM.diary.startDrag = function(obj,drag_type) {
+
+    if (SM.diary.drag.active) SM.diary.resetDrag()
+    
+    SM.diary.drag.obj = obj
+    SM.diary.drag.isTemp = false
+
+    if (SM.diary.drag.obj.hasClass("diary-booking-temp")) {
+      SM.diary.drag.isTemp = true
+    }
+    else if (SM.diary.tempBookingActive) {
+      SM.diary.clearTempBooking()
+    }
+
+    SM.diary.drag.active = true
+    SM.diary.drag.start_x = event.pageX
+    SM.diary.drag.start_y = event.pageY
+      
+    SM.diary.drag.obj_x = Number(SM.diary.drag.obj.position().left)
+    SM.diary.drag.obj_y = Number(SM.diary.drag.obj.position().top)
+
+    if (!SM.diary.drag.isTemp) {
+      SM.diary.drag.booking = SM.diary.bookings[Number(SM.diary.drag.obj.data("booking"))]
+      SM.diary.removeBookingFromVehicle(SM.diary.drag.booking)
+    }
+    else {
+      SM.diary.drag.booking = SM.diary.tempBooking
+    }
+
+    SM.diary.drag.originalSize = SM.diary.drag.booking.cells.length
+
+    SM.diary.drag.cell = SM.diary.drag.booking.cells[0]
+
+    SM.diary.tempBooking = $.extend({}, SM.diary.drag.booking);  //backup
+
+    SM.diary.tempBookingActive = true;
+
+    SM.diary.drag.type = drag_type
+
+    SM.diary.showHighlightingAtCell(SM.diary.drag.cell,SM.diary.DONT_SHRINK,SM.diary.DONT_NEGATIVE,SM.diary.drag.booking.cells.length)
+
+    SM.diary.liftBooking(SM.diary.drag.obj)
 
   }
 
@@ -572,11 +661,16 @@ String.prototype.capitalize = function() {
     // click a cell to place a new booking at default (or best available) size
 
 
-    $(SM.diary.settings.container).on("click", "div.cell", function(event){
-      console.log("here")
+
+
+
+    $(SM.diary.settings.container).on("mousedown", "div.cell", function(event){
+      event.preventDefault()
+
       if (SM.diary.tempBookingActive) {
         SM.diary.clearTempBooking()
       }
+      
       else if ($(this).hasClass("locked")) {
         //do nothing - can't place here
         SM.diary.clearTempBooking()
@@ -586,60 +680,24 @@ String.prototype.capitalize = function() {
         if (ok) {
           SM.diary.showBooking(SM.diary.tempBooking,SM.diary.IS_NEW)
           SM.diary.tempBookingActive = true;
+
+          SM.diary.startDrag($("div.diary-booking-temp"),SM.diary.DRAG_RIGHT)
         }
       }
     });
+
+
 
     // start to drag booking HOTSPOT
     $(SM.diary.settings.container).on("mousedown", "div.diary-booking .hotspot", function(event) {
       event.preventDefault()
 
-      if (SM.diary.drag.active) SM.diary.resetDrag()
-      SM.diary.drag.obj = $(this).closest("div.diary-booking")
+      var drag_type
+      if ($(this).hasClass("move")) drag_type = SM.diary.DRAG_MOVE
+      else if ($(this).hasClass("left")) drag_type = SM.diary.DRAG_LEFT
+      else if ($(this).hasClass("right")) drag_type = SM.diary.DRAG_RIGHT
 
-      SM.diary.drag.isTemp = false
-
-      if (SM.diary.drag.obj.hasClass("diary-booking-temp")) {
-        SM.diary.drag.isTemp = true
-      }
-      else if (SM.diary.tempBookingActive) {
-        SM.diary.clearTempBooking()
-      }
-
-      SM.diary.drag.active = true
-      SM.diary.drag.start_x = event.pageX
-      SM.diary.drag.start_y = event.pageY
-      
-      
-
-      SM.diary.drag.obj_x = Number(SM.diary.drag.obj.position().left)
-      SM.diary.drag.obj_y = Number(SM.diary.drag.obj.position().top)
-
-      if (!SM.diary.drag.isTemp) {
-        SM.diary.drag.booking = SM.diary.bookings[Number(SM.diary.drag.obj.data("booking"))]
-        SM.diary.removeBookingFromVehicle(SM.diary.drag.booking)
-      }
-      else {
-        SM.diary.drag.booking = SM.diary.tempBooking
-      }
-
-      SM.diary.drag.originalSize = SM.diary.drag.booking.cells.length
-
-      SM.diary.drag.cell = SM.diary.drag.booking.cells[0]
-
-      SM.diary.tempBooking = $.extend({}, SM.diary.drag.booking);  //backup
-
-      SM.diary.tempBookingActive = true;
-
-      if ($(this).hasClass("move")) SM.diary.drag.type = SM.diary.DRAG_MOVE
-      if ($(this).hasClass("left")) SM.diary.drag.type = SM.diary.DRAG_LEFT
-      if ($(this).hasClass("right")) SM.diary.drag.type = SM.diary.DRAG_RIGHT
-
-      
-      SM.diary.showHighlightingAtCell(SM.diary.drag.cell,SM.diary.DONT_SHRINK,SM.diary.DONT_NEGATIVE,SM.diary.drag.booking.cells.length)
-
-      SM.diary.liftBooking(SM.diary.drag.obj)
-
+      SM.diary.startDrag($(this).closest("div.diary-booking"),drag_type)
 
     });
 
@@ -652,6 +710,7 @@ String.prototype.capitalize = function() {
       }
       if (SM.diary.drag.active) {
 
+        
         SM.diary.removeBookingFromVehicle(SM.diary.drag.booking)
         // event.preventDefault()
         SM.diary.drag.current_x = event.pageX
@@ -718,8 +777,8 @@ String.prototype.capitalize = function() {
         if (autoScroll != 0) {
           autoScroll *= 3
           SM.diary.lastScrollLeft += autoScroll
-          SM.diary.calendar.scrollLeft(SM.diary.lastScrollLeft)
-
+          SM.diary.setScroll()
+          
           SM.diary.drag.start_x -= autoScroll
 
         }
@@ -791,20 +850,37 @@ $(function() {
   var vehicles = []
   vehicles.push({id:1,description:"Vehicle 1 asdas asda dsad sdsad adasd dasda sdasdasd asdasdsa dsaasd asdasd asdasdasds adasdsdasd asdasdasdasd dasdasdas dasdasdadas"})
   vehicles.push({id:2,description:"Vehicle 2 adsas dsd sdsd asdas das dasdas dsadasd asdas asdsadasd asdsadas sadas asdasdasd asdsadasdsa dasdsadsa sasadasasddsa dasdasdsadas dsadasdasdsadsas as"})
-  vehicles.push({id:3,description:"Vehicle 3"})
-  vehicles.push({id:4,description:"Vehicle 4"})
-  vehicles.push({id:5,description:"Vehicle 5"})
-  vehicles.push({id:6,description:"Vehicle 6"})
-  vehicles.push({id:7,description:"Vehicle 7"})
-  vehicles.push({id:8,description:"Vehicle 8"})
-  vehicles.push({id:9,description:"Vehicle 9"})
-  vehicles.push({id:10,description:"Vehicle 10"})
+  vehicles.push({id:3,description:"Vehicle 3 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:4,description:"Vehicle 4 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:5,description:"Vehicle 5 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:6,description:"Vehicle 6 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:7,description:"Vehicle 7 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:8,description:"Vehicle 8 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:9,description:"Vehicle 9 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:10,description:"Vehicle 10 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:11,description:"Vehicle 10 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:12,description:"Vehicle 10 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:13,description:"Vehicle 10 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:14,description:"Vehicle 10 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:15,description:"Vehicle 10 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:16,description:"Vehicle 10 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:17,description:"Vehicle 10 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:18,description:"Vehicle 10 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:19,description:"Vehicle 10 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
+  vehicles.push({id:20,description:"Vehicle 10 asdas das dasdas dsadasd asdas asdsadasd asdsadas"})
 
   var bookings = []
-  bookings.push({id:1,vehicle_id:3,start:new Date(2013,8,5,0,0,0), end:new Date(2013,8,7,23,59,59), contact:"Mr Pink"})
-  bookings.push({id:2,vehicle_id:5,start:new Date(2013,8,10,0,0,0), end:new Date(2013,8,14,23,59,59), contact:"Mrs Green"})
-  bookings.push({id:3,vehicle_id:3,start:new Date(2013,8,10,0,0,0), end:new Date(2013,8,12,23,59,59), contact:"Miss Turquoise-Orange"})
-  bookings.push({id:4,vehicle_id:4,start:new Date(2013,8,3,9,0,0), end:new Date(2013,8,7,18,59,59), contact:"Mr Purple"})
+  bookings.push({id:1,vehicle_id:1,start:new Date(2013,8,5,0,0,0), end:new Date(2013,8,7,23,59,59), contact:"Mr Pink", status:"Preliminary"})
+  bookings.push({id:2,vehicle_id:2,start:new Date(2013,8,10,0,0,0), end:new Date(2013,8,14,23,59,59), contact:"Mrs Green", status:"Preliminary"})
+  bookings.push({id:3,vehicle_id:3,start:new Date(2013,8,10,0,0,0), end:new Date(2013,8,12,23,59,59), contact:"Miss Turquoise-Orange", status:"Preliminary"})
+  bookings.push({id:4,vehicle_id:4,start:new Date(2013,8,3,0,0,0), end:new Date(2013,8,7,23,59,59), contact:"Mr Purple", status:"Preliminary"})
+  bookings.push({id:5,vehicle_id:4,start:new Date(2013,8,9,0,0,0), end:new Date(2013,8,11,23,59,59), contact:"Mr Brown", status:"Preliminary"})
+  bookings.push({id:6,vehicle_id:5,start:new Date(2013,8,1,0,0,0), end:new Date(2013,8,8,23,59,59), contact:"Mrs Black", status:"Preliminary"})
+  bookings.push({id:7,vehicle_id:6,start:new Date(2013,8,14,0,0,0), end:new Date(2013,8,16,23,59,59), contact:"Miss Blue", status:"Preliminary"})
+  bookings.push({id:8,vehicle_id:7,start:new Date(2013,8,19,0,0,0), end:new Date(2013,8,21,23,59,59), contact:"Mr Crimson", status:"Preliminary"})
+  bookings.push({id:9,vehicle_id:7,start:new Date(2013,8,22,0,0,0), end:new Date(2013,8,25,23,59,59), contact:"Ms Magenta", status:"Preliminary"})
+  bookings.push({id:10,vehicle_id:7,start:new Date(2013,8,26,0,0,0), end:new Date(2013,8,28,23,59,59), contact:"Mr Yellow", status:"Preliminary"})
+
 
 
   var unavailables =[]
